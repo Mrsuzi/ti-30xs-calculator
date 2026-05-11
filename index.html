@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>GED Calc Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="calculator">
+        <div class="screen">
+            <div id="history" class="history"></div>
+            <div id="display" class="current">0</div>
+        </div>
+        <div class="keypad">
+            <!-- Row 1: Scientific Basics -->
+            <button class="btn secondary" onclick="clearScreen()">AC</button>
+            <button class="btn secondary" onclick="deleteChar()">DEL</button>
+            <button class="btn secondary" onclick="appendOperator('%')">%</button>
+            <button class="btn operator" onclick="appendOperator('/')">÷</button>
+            
+            <!-- Row 2 -->
+            <button class="btn scientific" onclick="mathFunc('sin')">sin</button>
+            <button class="btn scientific" onclick="mathFunc('cos')">cos</button>
+            <button class="btn scientific" onclick="mathFunc('tan')">tan</button>
+            <button class="btn operator" onclick="appendOperator('*')">×</button>
+
+            <!-- Row 3 -->
+            <button class="btn" onclick="appendNumber('7')">7</button>
+            <button class="btn" onclick="appendNumber('8')">8</button>
+            <button class="btn" onclick="appendNumber('9')">9</button>
+            <button class="btn operator" onclick="appendOperator('-')">-</button>
+
+            <!-- Row 4 -->
+            <button class="btn" onclick="appendNumber('4')">4</button>
+            <button class="btn" onclick="appendNumber('5')">5</button>
+            <button class="btn" onclick="appendNumber('6')">6</button>
+            <button class="btn operator" onclick="appendOperator('+')">+</button>
+
+            <!-- Row 5 -->
+            <button class="btn" onclick="appendNumber('1')">1</button>
+            <button class="btn" onclick="appendNumber('2')">2</button>
+            <button class="btn" onclick="appendNumber('3')">3</button>
+            <button class="btn operator" onclick="calculate()">=</button>
+
+            <!-- Row 6 -->
+            <button class="btn" onclick="mathFunc('sqrt')">√</button>
+            <button class="btn" onclick="appendNumber('0')">0</button>
+            <button class="btn" onclick="appendNumber('.')">.</button>
+            <button class="btn scientific" onclick="mathFunc('pow')">x²</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
