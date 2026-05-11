@@ -1,84 +1,109 @@
 :root {
-    --ti-body: #2c3e50;
-    --ti-screen: #8fa38a;
+    --ti-body: #34495e;
+    --ti-screen: #9ea78d;
     --ti-btn-num: #ffffff;
-    --ti-btn-sci: #d1d8e0;
-    --ti-btn-op: #34495e;
+    --ti-btn-sci: #bdc3c7;
+    --ti-btn-op: #2c3e50;
     --ti-btn-enter: #54a0ff;
+    --ti-2nd: #f1c40f;
 }
 
 body {
-    background: #000;
+    background: #1a1a1a;
     display: flex;
     justify-content: center;
+    align-items: center;
     height: 100vh;
     margin: 0;
-    font-family: sans-serif;
+    font-family: 'Arial', sans-serif;
+    touch-action: manipulation;
 }
 
 .calculator {
-    width: 100%;
-    max-width: 450px;
+    width: 95vw;
+    max-width: 380px;
+    height: 90vh;
     background: var(--ti-body);
-    padding: 15px;
+    border-radius: 30px 30px 60px 60px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
+/* Screen: Fixed height to stop it from stretching */
 .screen {
     background: var(--ti-screen);
-    height: 120px;
-    border-radius: 4px;
-    border: 10px solid #1a1a1a;
+    height: 140px;
+    border: 8px solid #1a1a1a;
+    border-radius: 10px;
     padding: 10px;
-    font-family: 'Courier New', monospace;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
 }
 
-.line { color: #1a1a1a; font-weight: bold; text-align: right; }
-.line-1 { font-size: 1.2rem; opacity: 0.7; }
-.line-2 { font-size: 2rem; }
+.line { font-family: 'Courier New', monospace; color: #222; text-align: right; }
+.line-1 { font-size: 1rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; }
+.line-2 { font-size: 2.2rem; font-weight: bold; }
 
-/* D-Pad Styling */
+/* Control Row & D-Pad */
 .control-row {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
-    padding: 20px 0;
+    margin: 20px 0;
 }
 
 .d-pad {
     display: grid;
-    place-items: center;
+    grid-template-areas: 
+        ". up ."
+        "left . right"
+        ". down .";
+    gap: 2px;
 }
 
-.arrow {
+.arrow { background: #1a1a1a; color: white; border: none; padding: 10px; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; }
+.up { grid-area: up; margin: 0 auto; }
+.left { grid-area: left; }
+.right { grid-area: right; }
+.down { grid-area: down; margin: 0 auto; }
+
+.btn-menu {
     background: #1a1a1a;
     color: white;
     border: none;
-    padding: 10px;
-    border-radius: 50%;
+    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
 }
 
-/* Keypad Grid */
+/* Keypad: Precise 5-column grid */
 .keypad {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
+    gap: 10px;
+    flex-grow: 1;
 }
 
-.btn-num, .btn-sci, .btn-op, .btn-enter, .btn-menu {
+.btn {
     border: none;
-    border-radius: 8px;
-    padding: 15px 5px;
+    border-radius: 6px;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.2);
 }
 
-.btn-num { background: var(--ti-btn-num); }
+.btn:active { transform: translateY(2px); box-shadow: none; }
+
+.btn-num { background: var(--ti-btn-num); color: #333; }
 .btn-sci { background: var(--ti-btn-sci); color: #2c3e50; }
 .btn-op { background: var(--ti-btn-op); color: white; }
-.btn-enter { background: var(--ti-btn-enter); color: white; grid-column: span 1; }
-.btn-menu { background: #1a1a1a; color: white; border-radius: 15px; font-size: 0.7rem; }
+.btn-enter { background: var(--ti-btn-enter); color: white; font-size: 0.7rem; }
+.btn-2nd { background: var(--ti-2nd); color: black; }
