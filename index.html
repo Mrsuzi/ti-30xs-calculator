@@ -1,70 +1,921 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>TI-30XS Emulator</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TI-30XS">
+<meta name="theme-color" content="#1a1f2e">
+<link rel="manifest" href="manifest.json">
+<title>TI-30XS MultiView</title>
+<style>
+  :root {
+    --bg: #1a1f2e;
+    --calc-body: #1e2638;
+    --screen-bg: #c8d4b0;
+    --screen-text: #1a2a0a;
+    --screen-secondary: #3a5a1a;
+    --key-base: #2d3548;
+    --key-face: #3d4560;
+    --key-text: #e8ecf5;
+    --key-op: #4a5a8a;
+    --key-op-face: #5a6a9a;
+    --key-2nd: #c8940a;
+    --key-2nd-face: #d8a41a;
+    --key-enter: #2a6a3a;
+    --key-enter-face: #3a8a4a;
+    --key-clear: #8a2a2a;
+    --key-clear-face: #aa3a3a;
+    --key-num: #2a3040;
+    --key-num-face: #3a4050;
+    --accent: #6a8aff;
+    --shadow: rgba(0,0,0,0.5);
+    --font-screen: 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: #0d1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .calculator {
+    width: min(360px, 100vw);
+    height: 100svh;
+    max-height: 780px;
+    background: var(--calc-body);
+    border-radius: 16px 16px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Brand bar */
+  .brand {
+    background: linear-gradient(180deg, #1a4080 0%, #152e60 100%);
+    padding: 8px 14px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .brand-model {
+    font-size: 10px;
+    color: #8ab0e0;
+    letter-spacing: 0.5px;
+    margin-top: 1px;
+  }
+  .brand-logo {
+    font-size: 11px;
+    color: #8ab0e0;
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  /* Screen */
+  .screen-housing {
+    background: #141824;
+    margin: 10px 12px 6px;
+    border-radius: 6px;
+    padding: 6px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    flex-shrink: 0;
+  }
+
+  .screen {
+    background: var(--screen-bg);
+    border-radius: 3px;
+    padding: 8px 10px 6px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  .screen-indicators {
+    display: flex;
+    gap: 8px;
+    font-size: 9px;
+    color: var(--screen-secondary);
+    font-family: var(--font-screen);
+    font-weight: bold;
+    min-height: 12px;
+  }
+
+  .indicator { opacity: 0; transition: opacity 0.2s; }
+  .indicator.on { opacity: 1; }
+
+  .screen-history {
+    font-family: var(--font-screen);
+    font-size: 13px;
+    color: var(--screen-secondary);
+    text-align: right;
+    min-height: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .screen-expr {
+    font-family: var(--font-screen);
+    font-size: 14px;
+    color: var(--screen-text);
+    text-align: right;
+    min-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-all;
+  }
+
+  .screen-result {
+    font-family: var(--font-screen);
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--screen-text);
+    text-align: right;
+    min-height: 28px;
+    line-height: 1.1;
+  }
+
+  /* Mode row */
+  .mode-row {
+    padding: 2px 12px 4px;
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .mode-btn {
+    flex: 1;
+    height: 22px;
+    background: #252d40;
+    border: none;
+    border-radius: 3px;
+    font-size: 9px;
+    color: #8a9ab8;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-btn.active { background: #2a4080; color: #a0c0ff; }
+
+  /* Keys area */
+  .keys-area {
+    flex: 1;
+    padding: 4px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .key-row {
+    display: flex;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .key {
+    flex: 1;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.08s, filter 0.08s;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .key:active { transform: scale(0.92); filter: brightness(0.8); }
+
+  .key-top-label {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1;
+    margin-bottom: 2px;
+    color: var(--key-2nd);
+  }
+
+  .key-top-label.blue { color: #88aaff; }
+
+  .key-main {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--key-text);
+  }
+
+  .key-main.small { font-size: 10px; }
+  .key-main.xsmall { font-size: 8.5px; }
+
+  .key-sub {
+    font-size: 7px;
+    color: rgba(232,236,245,0.6);
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  /* Key types */
+  .k-2nd {
+    background: linear-gradient(180deg, var(--key-2nd) 0%, #a87408 100%);
+    box-shadow: 0 3px 0 #7a5406, inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .k-2nd .key-main { color: #fff; font-size: 11px; }
+
+  .k-op {
+    background: linear-gradient(180deg, var(--key-op-face) 0%, var(--key-op) 100%);
+    box-shadow: 0 3px 0 #2a3a6a, inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .k-func {
+    background: linear-gradient(180deg, #3d4560 0%, #2d3548 100%);
+    box-shadow: 0 3px 0 #1a2030, inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .k-num {
+    background: linear-gradient(180deg, var(--key-num-face) 0%, var(--key-num) 100%);
+    box-shadow: 0 3px 0 #181e2a, inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .k-enter {
+    background: linear-gradient(180deg, var(--key-enter-face) 0%, var(--key-enter) 100%);
+    box-shadow: 0 3px 0 #1a4a28, inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .k-clear {
+    background: linear-gradient(180deg, var(--key-clear-face) 0%, var(--key-clear) 100%);
+    box-shadow: 0 3px 0 #5a1818, inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .k-nav {
+    background: linear-gradient(180deg, #4a3560 0%, #38285a 100%);
+    box-shadow: 0 3px 0 #201545, inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .k-nav .key-main { font-size: 16px; }
+
+  .k-zero {
+    flex: 2.1;
+  }
+
+  /* 2nd mode highlight */
+  .calc.mode-2nd .k-2nd {
+    background: linear-gradient(180deg, #ffe040 0%, #d4a800 100%);
+    box-shadow: 0 3px 0 #a07800, inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .calc.mode-2nd .k-2nd .key-main { color: #1a1000; }
+
+  /* Scrolling screen text */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor { display: inline-block; width: 2px; height: 14px; background: var(--screen-text); animation: blink 1s infinite; vertical-align: middle; margin-left: 1px; }
+
+  .error-shake {
+    animation: shake 0.3s;
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+</style>
 </head>
 <body>
-    <div class="calculator">
-        <!-- Multiview Screen -->
-        <div class="screen">
-            <div id="history" class="line line-1"></div>
-            <div id="display" class="line line-2">0</div>
-        </div>
+<div class="calculator calc" id="calc">
 
-        <!-- D-Pad and Menu row -->
-        <div class="control-row">
-            <button class="btn-menu">mode</button>
-            <div class="d-pad">
-                <button class="arrow up">▲</button>
-                <div class="side-arrows">
-                    <button class="arrow left">◀</button>
-                    <button class="arrow right">▶</button>
-                </div>
-                <button class="arrow down">▼</button>
-            </div>
-            <button class="btn-menu">delete</button>
-        </div>
-
-        <div class="keypad">
-            <!-- Row 1 -->
-            <button class="btn-sci" onclick="mathFunc('frac')">n/d</button>
-            <button class="btn btn-2nd" onclick="mathFunc('2nd')">2nd</button>
-            <button class="btn-sci" onclick="mathFunc('pow')">x²</button>
-            <button class="btn-sci" onclick="mathFunc('sqrt')">√</button>
-            <button class="btn-op" onclick="clearScreen()">on/ac</button>
-
-            <!-- Row 2 -->
-            <button class="btn-num" onclick="appendNumber('7')">7</button>
-            <button class="btn-num" onclick="appendNumber('8')">8</button>
-            <button class="btn-num" onclick="appendNumber('9')">9</button>
-            <button class="btn-op" onclick="appendOperator('/')">÷</button>
-            <button class="btn-sci" onclick="mathFunc('sin')">sin</button>
-
-            <!-- Row 3 -->
-            <button class="btn-num" onclick="appendNumber('4')">4</button>
-            <button class="btn-num" onclick="appendNumber('5')">5</button>
-            <button class="btn-num" onclick="appendNumber('6')">6</button>
-            <button class="btn-op" onclick="appendOperator('*')">×</button>
-            <button class="btn-sci" onclick="mathFunc('cos')">cos</button>
-
-            <!-- Row 4 -->
-            <button class="btn-num" onclick="appendNumber('1')">1</button>
-            <button class="btn-num" onclick="appendNumber('2')">2</button>
-            <button class="btn-num" onclick="appendNumber('3')">3</button>
-            <button class="btn-op" onclick="appendOperator('-')">−</button>
-            <button class="btn-sci" onclick="mathFunc('tan')">tan</button>
-
-            <!-- Row 5 -->
-            <button class="btn-num" onclick="appendNumber('0')">0</button>
-            <button class="btn-num" onclick="appendNumber('.')">.</button>
-            <button class="btn-sci" onclick="mathFunc('toggle')">≈</button>
-            <button class="btn-op" onclick="appendOperator('+')">+</button>
-            <button class="btn-enter" onclick="calculate()">enter</button>
-        </div>
+  <div class="brand">
+    <div>
+      <div class="brand-name">TI-30XS MultiView™</div>
+      <div class="brand-model">Scientific Calculator</div>
     </div>
+    <div class="brand-logo">TI</div>
+  </div>
+
+  <div class="screen-housing">
+    <div class="screen" id="screen">
+      <div class="screen-indicators">
+        <span class="indicator" id="ind-2nd">2nd</span>
+        <span class="indicator" id="ind-hyp">HYP</span>
+        <span class="indicator" id="ind-deg">DEG</span>
+        <span class="indicator on" id="ind-mode">NORM</span>
+        <span class="indicator" id="ind-sci">SCI</span>
+        <span class="indicator" id="ind-eng">ENG</span>
+      </div>
+      <div class="screen-history" id="history"></div>
+      <div class="screen-expr" id="expr"></div>
+      <div class="screen-result" id="result">0</div>
+    </div>
+  </div>
+
+  <div class="mode-row">
+    <button class="mode-btn active" id="btn-deg" onclick="setAngle('deg')">DEG</button>
+    <button class="mode-btn" id="btn-rad" onclick="setAngle('rad')">RAD</button>
+    <button class="mode-btn" id="btn-grad" onclick="setAngle('grad')">GRAD</button>
+    <button class="mode-btn active" id="btn-norm" onclick="setDisplay('norm')">NORM</button>
+    <button class="mode-btn" id="btn-sci" onclick="setDisplay('sci')">SCI</button>
+    <button class="mode-btn" id="btn-eng" onclick="setDisplay('eng')">ENG</button>
+  </div>
+
+  <div class="keys-area" id="keys">
+
+    <!-- Row 1: 2nd, MODE, UNIT, STAT, TABLE -->
+    <div class="key-row">
+      <button class="key k-2nd" onclick="toggle2nd()">
+        <span class="key-main">2nd</span>
+      </button>
+      <button class="key k-func" onclick="pressMode()">
+        <span class="key-top-label">QUIT</span>
+        <span class="key-main small">MODE</span>
+      </button>
+      <button class="key k-func" onclick="pressUnit()">
+        <span class="key-top-label">D·R·G▶</span>
+        <span class="key-main small">UNIT</span>
+      </button>
+      <button class="key k-func" onclick="pressData()">
+        <span class="key-top-label">CLRDATA</span>
+        <span class="key-main small">DATA</span>
+      </button>
+      <button class="key k-func" onclick="pressTable()">
+        <span class="key-top-label">F(X)</span>
+        <span class="key-main small">TABLE</span>
+      </button>
+    </div>
+
+    <!-- Row 2: SIN COS TAN x² √ -->
+    <div class="key-row">
+      <button class="key k-func" onclick="pressTrig('sin')">
+        <span class="key-top-label">sin⁻¹</span>
+        <span class="key-main small">SIN</span>
+      </button>
+      <button class="key k-func" onclick="pressTrig('cos')">
+        <span class="key-top-label">cos⁻¹</span>
+        <span class="key-main small">COS</span>
+      </button>
+      <button class="key k-func" onclick="pressTrig('tan')">
+        <span class="key-top-label">tan⁻¹</span>
+        <span class="key-main small">TAN</span>
+      </button>
+      <button class="key k-func" onclick="pressPow2()">
+        <span class="key-top-label">√</span>
+        <span class="key-main">x²</span>
+      </button>
+      <button class="key k-func" onclick="pressSqrt()">
+        <span class="key-top-label">x³</span>
+        <span class="key-main">√</span>
+      </button>
+    </div>
+
+    <!-- Row 3: LOG LN eˣ 10ˣ yˣ -->
+    <div class="key-row">
+      <button class="key k-func" onclick="pressLog()">
+        <span class="key-top-label">10ˣ</span>
+        <span class="key-main small">LOG</span>
+      </button>
+      <button class="key k-func" onclick="pressLn()">
+        <span class="key-top-label">eˣ</span>
+        <span class="key-main small">LN</span>
+      </button>
+      <button class="key k-func" onclick="pressXpow()">
+        <span class="key-top-label">ˣ√y</span>
+        <span class="key-main small">yˣ</span>
+      </button>
+      <button class="key k-func" onclick="pressPi()">
+        <span class="key-top-label">e</span>
+        <span class="key-main">π</span>
+      </button>
+      <button class="key k-func" onclick="pressRecip()">
+        <span class="key-top-label">EE</span>
+        <span class="key-main small">x⁻¹</span>
+      </button>
+    </div>
+
+    <!-- Row 4: NAV keys, (, ), ÷ -->
+    <div class="key-row">
+      <button class="key k-nav" onclick="navUp()">
+        <span class="key-main">▲</span>
+      </button>
+      <button class="key k-nav" onclick="navLeft()">
+        <span class="key-main">◀</span>
+      </button>
+      <button class="key k-nav" onclick="navDown()">
+        <span class="key-main">▼</span>
+      </button>
+      <button class="key k-nav" onclick="navRight()">
+        <span class="key-main">▶</span>
+      </button>
+      <button class="key k-clear" onclick="pressDel()">
+        <span class="key-top-label">INS</span>
+        <span class="key-main small">DEL</span>
+      </button>
+    </div>
+
+    <!-- Row 5: (, ), %, %, clear -->
+    <div class="key-row">
+      <button class="key k-op" onclick="pressLParen()">
+        <span class="key-top-label">ANS</span>
+        <span class="key-main">(</span>
+      </button>
+      <button class="key k-op" onclick="pressRParen()">
+        <span class="key-top-label">)</span>
+        <span class="key-main">)</span>
+      </button>
+      <button class="key k-op" onclick="pressPercent()">
+        <span class="key-top-label">CAT</span>
+        <span class="key-main">%</span>
+      </button>
+      <button class="key k-op" onclick="pressAbs()">
+        <span class="key-top-label">|x|</span>
+        <span class="key-main xsmall">ABS</span>
+      </button>
+      <button class="key k-clear" onclick="pressClear()">
+        <span class="key-top-label">CLRALL</span>
+        <span class="key-main small">CLEAR</span>
+      </button>
+    </div>
+
+    <!-- Row 6: 7 8 9 × -->
+    <div class="key-row">
+      <button class="key k-num" onclick="pressNum('7')">
+        <span class="key-top-label">RESET</span>
+        <span class="key-main">7</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('8')">
+        <span class="key-top-label">nPr</span>
+        <span class="key-main">8</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('9')">
+        <span class="key-top-label">nCr</span>
+        <span class="key-main">9</span>
+      </button>
+      <button class="key k-op" onclick="pressOp('×')">
+        <span class="key-top-label">×10ⁿ</span>
+        <span class="key-main">×</span>
+      </button>
+      <button class="key k-op" onclick="pressOp('÷')">
+        <span class="key-top-label">QUOT</span>
+        <span class="key-main">÷</span>
+      </button>
+    </div>
+
+    <!-- Row 7: 4 5 6 + − -->
+    <div class="key-row">
+      <button class="key k-num" onclick="pressNum('4')">
+        <span class="key-top-label">STO▶</span>
+        <span class="key-main">4</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('5')">
+        <span class="key-top-label">RCL</span>
+        <span class="key-main">5</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('6')">
+        <span class="key-top-label">MEM</span>
+        <span class="key-main">6</span>
+      </button>
+      <button class="key k-op" onclick="pressOp('+')">
+        <span class="key-top-label">MEAN</span>
+        <span class="key-main">+</span>
+      </button>
+      <button class="key k-op" onclick="pressOp('−')">
+        <span class="key-top-label">SUM</span>
+        <span class="key-main">−</span>
+      </button>
+    </div>
+
+    <!-- Row 8: 1 2 3 ENTER -->
+    <div class="key-row">
+      <button class="key k-num" onclick="pressNum('1')">
+        <span class="key-top-label">LINK</span>
+        <span class="key-main">1</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('2')">
+        <span class="key-top-label">APPS</span>
+        <span class="key-main">2</span>
+      </button>
+      <button class="key k-num" onclick="pressNum('3')">
+        <span class="key-top-label">PRGM</span>
+        <span class="key-main">3</span>
+      </button>
+      <button class="key k-enter" onclick="pressEnter()" style="flex:1.05">
+        <span class="key-top-label blue">ENTRY</span>
+        <span class="key-main small">ENTER</span>
+      </button>
+    </div>
+
+    <!-- Row 9: 0 . neg ENTER cont-->
+    <div class="key-row">
+      <button class="key k-num k-zero" onclick="pressNum('0')">
+        <span class="key-top-label">CHOOSE</span>
+        <span class="key-main">0</span>
+      </button>
+      <button class="key k-num" onclick="pressDecimal()">
+        <span class="key-top-label">i</span>
+        <span class="key-main">.</span>
+      </button>
+      <button class="key k-op" onclick="pressNeg()">
+        <span class="key-top-label">FRAC</span>
+        <span class="key-main">(−)</span>
+      </button>
+      <button class="key k-enter" onclick="pressEnter()" style="flex:1.05">
+        <span class="key-main small">=</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let expr = '';
+let history = '';
+let lastResult = '0';
+let is2nd = false;
+let angleMode = 'deg'; // deg rad grad
+let dispMode = 'norm';  // norm sci eng
+let justEvaluated = false;
+let memory = 0;
+
+// ── Display ───────────────────────────────────────────────────────────────
+function updateDisplay() {
+  document.getElementById('expr').textContent = expr;
+  document.getElementById('result').textContent = lastResult;
+  document.getElementById('history').textContent = history;
+  document.getElementById('ind-2nd').classList.toggle('on', is2nd);
+  document.getElementById('ind-deg').classList.toggle('on', angleMode === 'deg');
+  document.getElementById('ind-mode').textContent = angleMode.toUpperCase();
+  document.getElementById('ind-mode').classList.add('on');
+  document.getElementById('ind-sci').classList.toggle('on', dispMode === 'sci');
+  document.getElementById('ind-eng').classList.toggle('on', dispMode === 'eng');
+}
+
+// ── Angle mode ─────────────────────────────────────────────────────────────
+function setAngle(m) {
+  angleMode = m;
+  document.querySelectorAll('.mode-row .mode-btn').forEach(b => {
+    if(['btn-deg','btn-rad','btn-grad'].includes(b.id)) b.classList.remove('active');
+  });
+  document.getElementById('btn-' + m).classList.add('active');
+  updateDisplay();
+}
+
+function setDisplay(m) {
+  dispMode = m;
+  ['norm','sci','eng'].forEach(x => document.getElementById('btn-' + x).classList.remove('active'));
+  document.getElementById('btn-' + m).classList.add('active');
+  updateDisplay();
+  if (lastResult !== '0' && lastResult !== 'ERROR') {
+    try { lastResult = formatResult(parseFloat(lastResult)); } catch(e){}
+    updateDisplay();
+  }
+}
+
+// ── Format result ──────────────────────────────────────────────────────────
+function formatResult(n) {
+  if (!isFinite(n)) return 'ERROR';
+  if (dispMode === 'sci') return n.toExponential(6).replace('e+', 'e').replace('e0','e0');
+  if (dispMode === 'eng') {
+    let exp = Math.floor(Math.log10(Math.abs(n)) / 3) * 3;
+    if (!isFinite(exp)) exp = 0;
+    let mant = n / Math.pow(10, exp);
+    return mant.toFixed(4).replace(/\.?0+$/, '') + (exp !== 0 ? 'e' + exp : '');
+  }
+  // norm
+  if (Math.abs(n) >= 1e10 || (Math.abs(n) < 1e-4 && n !== 0)) {
+    return n.toPrecision(9).replace(/\.?0+e/, 'e');
+  }
+  let s = parseFloat(n.toPrecision(10)).toString();
+  return s;
+}
+
+// ── Evaluate ───────────────────────────────────────────────────────────────
+function toRadians(x) {
+  if (angleMode === 'deg') return x * Math.PI / 180;
+  if (angleMode === 'grad') return x * Math.PI / 200;
+  return x;
+}
+function fromRadians(x) {
+  if (angleMode === 'deg') return x * 180 / Math.PI;
+  if (angleMode === 'grad') return x * 200 / Math.PI;
+  return x;
+}
+
+function evaluate(e) {
+  let s = e
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/−/g, '-')
+    .replace(/π/g, '(Math.PI)')
+    .replace(/\be\b/g, '(Math.E)')
+    .replace(/ANS/g, '(' + (lastResult || '0') + ')')
+    .replace(/sin\(/g, '__sin(')
+    .replace(/cos\(/g, '__cos(')
+    .replace(/tan\(/g, '__tan(')
+    .replace(/asin\(/g, '__asin(')
+    .replace(/acos\(/g, '__acos(')
+    .replace(/atan\(/g, '__atan(')
+    .replace(/log\(/g, 'Math.log10(')
+    .replace(/ln\(/g, 'Math.log(')
+    .replace(/√\(/g, 'Math.sqrt(')
+    .replace(/abs\(/g, 'Math.abs(')
+    .replace(/\^/g, '**');
+
+  function __sin(x) { return Math.sin(toRadians(x)); }
+  function __cos(x) { return Math.cos(toRadians(x)); }
+  function __tan(x) { return Math.tan(toRadians(x)); }
+  function __asin(x) { return fromRadians(Math.asin(x)); }
+  function __acos(x) { return fromRadians(Math.acos(x)); }
+  function __atan(x) { return fromRadians(Math.atan(x)); }
+
+  let result = Function('"use strict"; let __sin=arguments[0],__cos=arguments[1],__tan=arguments[2],__asin=arguments[3],__acos=arguments[4],__atan=arguments[5]; return ' + s)(
+    __sin, __cos, __tan, __asin, __acos, __atan
+  );
+  if (!isFinite(result)) throw new Error('Math error');
+  return result;
+}
+
+// ── Key handlers ───────────────────────────────────────────────────────────
+function toggle2nd() {
+  is2nd = !is2nd;
+  document.getElementById('calc').classList.toggle('mode-2nd', is2nd);
+  updateDisplay();
+}
+
+function pressNum(n) {
+  if (justEvaluated) { expr = ''; justEvaluated = false; }
+  expr += n;
+  updateDisplay();
+}
+
+function pressDecimal() {
+  if (justEvaluated) { expr = '0'; justEvaluated = false; }
+  // only add decimal to the current number segment
+  let parts = expr.split(/[\+\-\*\/\(]/);
+  let last = parts[parts.length - 1];
+  if (!last.includes('.')) expr += '.';
+  updateDisplay();
+}
+
+function pressOp(op) {
+  is2nd = false;
+  if (justEvaluated) justEvaluated = false;
+  if (expr === '' && op !== '−') expr = lastResult;
+  expr += op;
+  updateDisplay();
+}
+
+function pressLParen() {
+  if (is2nd) { pressAns(); return; }
+  if (justEvaluated) { expr = ''; justEvaluated = false; }
+  expr += '(';
+  updateDisplay();
+}
+
+function pressRParen() {
+  expr += ')';
+  updateDisplay();
+}
+
+function pressPercent() {
+  if (expr) {
+    try {
+      let v = evaluate(expr);
+      expr = String(v / 100);
+      updateDisplay();
+    } catch(e) {}
+  }
+}
+
+function pressAbs() {
+  if (is2nd) { toggle2nd(); return; }
+  if (justEvaluated) { expr = ''; justEvaluated = false; }
+  expr += 'abs(';
+  updateDisplay();
+}
+
+function pressNeg() {
+  if (is2nd) { toggle2nd(); return; }
+  if (expr === '' || justEvaluated) {
+    expr = '-';
+    justEvaluated = false;
+    updateDisplay();
+    return;
+  }
+  // find last number and negate it
+  let m = expr.match(/^(.*[+\-×÷\(])?(-?\d*\.?\d*)$/);
+  if (m && m[2]) {
+    expr = (m[1] || '') + (m[2].startsWith('-') ? m[2].slice(1) : '-' + m[2]);
+  } else {
+    expr = '-(' + expr + ')';
+  }
+  updateDisplay();
+}
+
+function pressTrig(fn) {
+  if (justEvaluated) { expr = ''; justEvaluated = false; }
+  if (is2nd) {
+    expr += 'a' + fn + '(';
+    is2nd = false;
+    document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    expr += fn + '(';
+  }
+  updateDisplay();
+}
+
+function pressPow2() {
+  if (is2nd) {
+    // sqrt
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += '√(';
+    is2nd = false;
+    document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    expr += '^2';
+  }
+  updateDisplay();
+}
+
+function pressSqrt() {
+  if (is2nd) {
+    expr += '^3';
+    is2nd = false;
+    document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += '√(';
+  }
+  updateDisplay();
+}
+
+function pressLog() {
+  if (is2nd) {
+    expr += '10^(';
+    is2nd = false; document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += 'log(';
+  }
+  updateDisplay();
+}
+
+function pressLn() {
+  if (is2nd) {
+    expr += 'e^(';
+    is2nd = false; document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += 'ln(';
+  }
+  updateDisplay();
+}
+
+function pressXpow() {
+  expr += '^(';
+  updateDisplay();
+}
+
+function pressPi() {
+  if (is2nd) {
+    expr += 'e';
+    is2nd = false; document.getElementById('calc').classList.remove('mode-2nd');
+  } else {
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += 'π';
+  }
+  updateDisplay();
+}
+
+function pressRecip() {
+  expr += '^(-1)';
+  updateDisplay();
+}
+
+function pressAns() {
+  if (justEvaluated) { expr = ''; justEvaluated = false; }
+  expr += 'ANS';
+  updateDisplay();
+}
+
+function pressDel() {
+  if (justEvaluated) { expr = ''; lastResult = '0'; justEvaluated = false; updateDisplay(); return; }
+  expr = expr.slice(0, -1);
+  updateDisplay();
+}
+
+function pressClear() {
+  expr = '';
+  history = '';
+  lastResult = '0';
+  justEvaluated = false;
+  is2nd = false;
+  document.getElementById('calc').classList.remove('mode-2nd');
+  updateDisplay();
+}
+
+function pressEnter() {
+  if (!expr && !justEvaluated) return;
+  if (justEvaluated) {
+    // repeat last expression with ANS
+    history = lastResult;
+    lastResult = lastResult;
+    updateDisplay();
+    return;
+  }
+  try {
+    let displayExpr = expr;
+    let result = evaluate(expr);
+    history = displayExpr + ' =';
+    lastResult = formatResult(result);
+    expr = '';
+    justEvaluated = true;
+    is2nd = false;
+    document.getElementById('calc').classList.remove('mode-2nd');
+  } catch(e) {
+    history = expr;
+    lastResult = 'ERROR';
+    expr = '';
+    justEvaluated = true;
+    document.getElementById('screen').classList.add('error-shake');
+    setTimeout(() => document.getElementById('screen').classList.remove('error-shake'), 400);
+  }
+  updateDisplay();
+}
+
+function pressMode() {
+  // cycle angle mode
+  let modes = ['deg','rad','grad'];
+  let idx = (modes.indexOf(angleMode) + 1) % 3;
+  setAngle(modes[idx]);
+}
+
+function pressUnit() {
+  setAngle(angleMode); // visual feedback
+}
+
+function pressData() {
+  pressClear();
+}
+
+function pressTable() {
+  // show quick reference
+  history = 'TABLE: F(X) mode';
+  updateDisplay();
+}
+
+// Navigation (cursor movement - simplified for mobile)
+function navUp() { history = ''; updateDisplay(); }
+function navDown() { updateDisplay(); }
+function navLeft() { if (expr.length > 0) { expr = expr.slice(0,-1); updateDisplay(); } }
+function navRight() { updateDisplay(); }
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.key >= '0' && e.key <= '9') pressNum(e.key);
+  else if (e.key === '.') pressDecimal();
+  else if (e.key === '+') pressOp('+');
+  else if (e.key === '-') pressOp('−');
+  else if (e.key === '*') pressOp('×');
+  else if (e.key === '/') { e.preventDefault(); pressOp('÷'); }
+  else if (e.key === 'Enter' || e.key === '=') pressEnter();
+  else if (e.key === 'Backspace') pressDel();
+  else if (e.key === 'Escape') pressClear();
+  else if (e.key === '(') pressLParen();
+  else if (e.key === ')') pressRParen();
+  else if (e.key === '%') pressPercent();
+  else if (e.key === '^') pressXpow();
+});
+
+// Init
+updateDisplay();
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>
